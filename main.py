@@ -1,16 +1,26 @@
 # Justin Ortiz Reboot Script
 
 import pexpect
+import getpass
 import sys
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 
-#password = input("Enter password: ")
-password = ''
+# load env vars
+env_file = Path('.env').resolve()
+load_dotenv(env_file)
+
+
+# securely get pw
+password = getpass.getpass('Enter password: ')
 
 # TODO: Change input collection to command line.
-#hostname = input("Enter machine's hostname: ")
-hostname = ''
-username = ''
+#hostname = os.getenv('HOSTNAME')
+#username = os.getenv('USERNAME')
+username = input("Enter username: ")
+hostname = input("Enter machine's hostname: ")
 command1 = f'ssh {hostname}'
 
 # start new process that establishes conn via ssh
