@@ -1,41 +1,96 @@
 # Justin Ortiz Reboot Script
 
-import subprocess
+import pexpect
+import sys
 
 
-# collect password
-password = input("Enter password: ")
+#password = input("Enter password: ")
+password = ''
 
-# collect hostname
-hostname = input("Enter machine's hostname: ")
+# TODO: Change input collection to command line.
+#hostname = input("Enter machine's hostname: ")
+hostname = ''
+username = ''
 command1 = f'ssh {hostname}'
 
-# call process. Ssh into machine then reboot
-process = subprocess.Popen(
-    args=command1,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True
-)
+# start new process that establishes conn via ssh
+process = pexpect.spawn(command=command1)
 
-# send password to process
-stdout, stderr = process.communicate(input=password)
-if not stderr:
-    print(f"Successfully ssh'd into machine. {stdout}")
+# wait for password prompt
+try:
+    process.expect(r'\(.*@.*\) Password: ', timeout=5)
+    print("Password prompt found.")
+    #print((process.after.decode()))
 
-command2 = 'sudo -S reboot'
-process = subprocess.Popen(
-    args=command2,
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    text=True
-)
+# TODO: Make function for catching exceptions. 
+except pexpect.exceptions.TIMEOUT:
+    print("Password prompt not found. Closing connection and exiting program.")
+    process.close()
+    sys.exit(1)
+ 
 
-# send password to process
-stdout, stderr = process.communicate(input=password)
-if not stderr:
-    print(f'Successfully rebooted machine. {stdout}')
+# Send password to conn via ssh
+process.sendline(password)
 
-# Output success
+# TODO: Need to update to handle incorrect pw entries. 
+try:
+    process.expect(r'Welcome to.*')
+    print(f"Successfully connected to {hostname}.")
+    #print((process.after.decode()))
+
+except pexpect.exceptions.TIMEOUT:
+    print(f"Timed out trying to connect to {hostname}")
+    process.close()
+    sys.exit(1)
+
+# expect new prompt after welcome message
+process.expect(r'\$ ') 
+process.sendline('sudo reboot')
+
+# wait for possible prompts
+prompts = [r'\[sudo\] password for .*', r'(W: molly-guard)([\s\S]*)'] # These didn't work: 'W\: molly\-guard .*', r'W: molly-guard.*'
+
+try:
+    index = process.expect(prompts)
+    #print((process.after.decode()))
+
+    # prompted for sudo pw
+    if index == 0: 
+        process.sendline(password)
+        print('Sent pw to reboot.')
+        try:
+            process.expect(prompts[1])
+            print('Got mollyguard msg.')
+            process.sendline(hostname)
+            print('Sent hostname to mollyguard')
+            try:
+                process.expect(r'Connection to ([\s\S]*)')
+                #print('print after: ', process.after.decode())
+                print(f'Successfully rebooted {hostname}.')
+            except pexpect.exceptions.TIMEOUT:
+                print('Timed out waiting for reboot confirmation.')
+                process.close()
+                sys.exit(1)
+        except pexpect.exceptions.TIMEOUT:
+            print('Timed out waiting for mollyguard message.')
+            process.close()
+            sys.exit(1)
+    
+    # propmted for hostname
+    elif index == 1: 
+        process.sendline(hostname)
+        try:
+            process.expect(r'Connection to ([\s\S]*)')
+            #int(process.after.decode())
+            print(f'Successfully rebooted {hostname}.')
+        except pexpect.exceptions.TIMEOUT:
+            print('Timed out waiting for reboot confirmation.')
+            process.close()
+            sys.exit(1)
+
+except pexpect.exceptions.TIMEOUT:
+    print("Timed out after sudo password prompt.")
+    process.close()
+    sys.exit(1)
+
+process.close()
