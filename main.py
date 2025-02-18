@@ -5,7 +5,7 @@ import getpass
 import sys
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 
 # load env vars
