@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 
 # load env vars
-env_file = Path('.env').resolve()
-load_dotenv(env_file)
+#env_file = Path('.env').resolve()
+#load_dotenv(env_file)
 
 
 # securely get pw
