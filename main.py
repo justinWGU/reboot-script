@@ -6,6 +6,8 @@ import getpass
 import sys
 import os
 
+
+# cotinuously prompt for pw if entry is incorrect
 def getpassword():
     
     prompts = [r'Welcome to.*', r'\(.*@.*\) Password: ']
@@ -26,25 +28,29 @@ def getpassword():
     return password
 
 
-# TODO: Change input collection to command line.
+# accept hostname directly from command line
 parser = argparse.ArgumentParser(description="Parser to get hostname.")
 parser.add_argument("hostname", type=str, help="The machine you want to reboot.")
 args = parser.parse_args()
-print(f"Hostname equals: {args.hostname}")
+print(f"Hostname: {args.hostname}")
 
+
+# automatically get user's username
 username = os.getlogin()
-print(username)
+print(f' Username: {username}')
 hostname = str(args.hostname)
 command1 = f'ssh {hostname}'
 
-# start new process that establishes conn via ssh
+
+# start new process that establishes ssh connection
 process = pexpect.spawn(command=command1)
 ssh_prompts = [r'\(.*@.*\) Password: ', r'The authenticity of host ([\s\S]*)']
-# TODO: handle case where hostname is not found 
 
+# send password to remote machine
 try:
+
     result1 = process.expect(ssh_prompts, timeout=5)
-    
+
     if result1 == 1:
         print(f'Adding {hostname} to list of known machines.')
         process.sendline('Yes')
@@ -52,15 +58,22 @@ try:
     
     password = getpassword()
 
-
 except pexpect.exceptions.TIMEOUT:
-    print(f'Could not connect to {hostname}.')
+    print(f'Timed out connecting to {hostname}.')
     process.close()
     sys.exit(1)
 
 except pexpect.exceptions.EOF:
     print(f'Error occurred connecting to {hostname}.')
     print(process.before.decode())
+    sys.exit(1)
+
+except KeyboardInterrupt:
+    print('^C entered. Exiting program.')
+    sys.exit(1)
+
+except pexpect.exceptions.ExceptionPexpect:
+    print('Unkown error ocurred. ')
     sys.exit(1)
  
 
@@ -96,6 +109,14 @@ try:
 except pexpect.exceptions.TIMEOUT:
     print("Error occurred trying to reboot machine.")
     process.close()
+    sys.exit(1)
+
+except KeyboardInterrupt:
+    print('^C entered. Exiting program.')
+    sys.exit(1)
+
+except pexpect.exceptions.ExceptionPexpect:
+    print('Unkown error ocurred. ')
     sys.exit(1)
 
 finally:
