@@ -1,9 +1,10 @@
 # Justin Ortiz Reboot Script
 
+import argparse
 import pexpect
 import getpass
 import sys
-
+import os
 
 def getpassword():
     
@@ -26,14 +27,20 @@ def getpassword():
 
 
 # TODO: Change input collection to command line.
-username = input("Enter username: ")
-hostname = input("Enter machine's hostname: ") # TODO: strip input of spaces
+parser = argparse.ArgumentParser(description="Parser to get hostname.")
+parser.add_argument("hostname", type=str, help="The machine you want to reboot.")
+args = parser.parse_args()
+print(f"Hostname equals: {args.hostname}")
+
+username = os.getlogin()
+print(username)
+hostname = str(args.hostname)
 command1 = f'ssh {hostname}'
 
 # start new process that establishes conn via ssh
 process = pexpect.spawn(command=command1)
 ssh_prompts = [r'\(.*@.*\) Password: ', r'The authenticity of host ([\s\S]*)']
-# wait for password prompt
+# TODO: handle case where hostname is not found 
 
 try:
     result1 = process.expect(ssh_prompts, timeout=5)
@@ -49,6 +56,11 @@ try:
 except pexpect.exceptions.TIMEOUT:
     print(f'Could not connect to {hostname}.')
     process.close()
+    sys.exit(1)
+
+except pexpect.exceptions.EOF:
+    print(f'Error occurred connecting to {hostname}.')
+    print(process.before.decode())
     sys.exit(1)
  
 
