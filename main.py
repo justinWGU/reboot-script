@@ -1,13 +1,13 @@
 # Justin Ortiz Reboot Script
 
-import argparse
-import pexpect
-import getpass
-import sys
-import os
+import argparse # accept command line args
+import pexpect # manage ssh processes
+import getpass # securely obtain pw
+import sys # end program after an exception
+import os # get user's  username
 
 
-# cotinuously prompt for pw if entry is incorrect
+# continuously prompt for pw if entry is incorrect
 def getpassword():
     
     prompts = [r'Welcome to.*', r'\(.*@.*\) Password: ']
@@ -116,7 +116,7 @@ except KeyboardInterrupt:
     sys.exit(1)
 
 except pexpect.exceptions.ExceptionPexpect:
-    print('Unkown error ocurred. ')
+    print('Unknown error ocurred. ')
     sys.exit(1)
 
 finally:
