@@ -4,8 +4,10 @@
 os_name=$(uname -s)
 
 # Determine the venv activation command
-if [[ "$os_name" == "Darwin" || "$os_name" == "Linux" ]]; then
+if [ "$os_name" == "Darwin" ]; then 
     venv_activate="source /Volumes/proj/avtr/work/jortiz/reboot-script/.venv/bin/activate"
+elif [ "$os_name" == "Linux" ]; then
+    venv_activate="source /proj/avtr/work/jortiz/reboot-script/.venv/bin/activate"
 else
     echo "Unsupported operating system."
     exit 1
